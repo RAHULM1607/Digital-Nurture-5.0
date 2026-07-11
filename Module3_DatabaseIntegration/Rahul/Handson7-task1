@@ -1,0 +1,23 @@
+
+pip install alembic
+
+
+
+alembic init migrations
+
+
+sqlalchemy.url = mysql+pymysql://root:password@localhost/college_db_orm
+
+from models import Base
+
+target_metadata = Base.metadata
+
+alembic revision --autogenerate -m "initial schema"
+
+
+
+alembic upgrade head
+
+
+
+alembic current
