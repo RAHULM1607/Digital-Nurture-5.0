@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1 class="site-title">Student Portal</h1>
+
+        <!-- Mobile Placeholder -->
+        <div class="menu-toggle">☰ Menu</div>
+
+        <!-- Navigation -->
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Courses</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="#">Grades</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- Hero -->
+        <section id="hero">
+            <h1>Welcome to the Student Portal</h1>
+
+            <p>
+                Access your courses, monitor your progress,
+                and explore learning resources.
+            </p>
+
+            <button>Explore Courses</button>
+        </section>
+
+        <!-- Student Stats -->
+        <section class="stats-bar">
+
+            <div class="stat-item">
+                <h3>Courses Enrolled</h3>
+                <p>3</p>
+            </div>
+
+            <div class="stat-item">
+                <h3>GPA</h3>
+                <p>3.8</p>
+            </div>
+
+            <div class="stat-item">
+                <h3>Semester</h3>
+                <p>6</p>
+            </div>
+
+        </section>
+
+        <!-- Courses -->
+        <section id="courses">
+
+            <h2>Available Courses</h2>
+
+            <div class="course-grid">
+
+                <article class="course-card">
+                    <h3>Web Development</h3>
+                    <p>Learn HTML, CSS and JavaScript.</p>
+                    <span>Credits: 4</span>
+                </article>
+
+                <article class="course-card">
+                    <h3>Database Management</h3>
+                    <p>Learn SQL, ER diagrams and normalization.</p>
+                    <span>Credits: 3</span>
+                </article>
+
+                <article class="course-card">
+                    <h3>Cyber Security</h3>
+                    <p>Network security and ethical hacking.</p>
+                    <span>Credits: 4</span>
+                </article>
+
+                <article class="course-card">
+                    <h3>Cloud Computing</h3>
+                    <p>Learn AWS cloud services and deployment.</p>
+                    <span>Credits: 3</span>
+                </article>
+
+                <article class="course-card">
+                    <h3>Artificial Intelligence</h3>
+                    <p>Introduction to Machine Learning and AI.</p>
+                    <span>Credits: 4</span>
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Student Portal. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
+
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+    color:#333;
+    line-height:1.6;
+}
+
+
+
+header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:20px;
+
+    background:#1f4e79;
+    color:white;
+}
+
+.site-title{
+    font-size:clamp(1.5rem,3vw,2.5rem);
+}
+
+.menu-toggle{
+    display:block;
+    font-weight:bold;
+}
+
+nav{
+    display:none;
+}
+
+nav ul{
+
+    display:flex;
+    gap:25px;
+
+    list-style:none;
+    align-items:center;
+}
+
+nav a{
+
+    text-decoration:none;
+    color:white;
+    font-weight:bold;
+}
+
+nav a:hover{
+
+    color:gold;
+}
+
+
+
+#hero{
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    text-align:center;
+
+    min-height:40vh;
+
+    padding:40px 20px;
+}
+
+#hero h1{
+
+    margin-bottom:20px;
+}
+
+#hero p{
+
+    margin-bottom:20px;
+}
+
+#hero button{
+
+    padding:12px 24px;
+
+    border:2px solid #1f4e79;
+
+    background:white;
+
+    color:#1f4e79;
+
+    border-radius:6px;
+
+    cursor:pointer;
+}
+
+#hero button:hover{
+
+    background:#1f4e79;
+    color:white;
+}
+
+
+
+.stats-bar{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+    padding:20px;
+}
+
+.stat-item{
+
+    flex:1;
+
+    background:white;
+
+    padding:20px;
+
+    text-align:center;
+
+    border-radius:8px;
+
+    box-shadow:0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* ==========================
+   Courses
+========================== */
+
+#courses{
+
+    padding:40px 20px;
+}
+
+#courses h2{
+
+    margin-bottom:25px;
+}
+
+/* Grid */
+
+.course-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+    gap:20px;
+}
+
+/* Cards */
+
+.course-card{
+
+    padding:20px;
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    box-shadow:0 3px 8px rgba(0,0,0,.15);
+
+    background:white;
+
+    min-height:220px;
+
+    align-self:stretch;
+}
+
+.course-card h3{
+
+    margin-bottom:10px;
+}
+
+.course-card p{
+
+    margin-bottom:15px;
+}
+
+/* ==========================
+   Footer
+========================== */
+
+footer{
+
+    background:#1f4e79;
+
+    color:white;
+
+    text-align:center;
+
+    padding:20px;
+}
+
+/* ==========================
+   Tablet
+========================== */
+
+@media (min-width:768px){
+
+    .course-grid{
+
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .stats-bar{
+
+        flex-direction:row;
+    }
+
+    nav{
+
+        display:block;
+    }
+
+    .menu-toggle{
+
+        display:none;
+    }
+
+}
+
+
+
+@media (min-width:1024px){
+
+    .course-grid{
+
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    #hero{
+
+        padding:100px 20px;
+    }
+
+}
