@@ -1,0 +1,164 @@
+from django.db import models
+from django.utils import timezone
+
+# Task 11: Define Models
+
+class Department(models.Model):
+    """
+    Department model representing academic departments.
+    
+    Attributes:
+        name: Department name (e.g., Computer Science)
+        head_of_dept: Name of department head
+        budget: Department budget
+    """
+    name = models.CharField(max_length=100, unique=True)
+    head_of_dept = models.CharField(max_length=100)
+    budget = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    # Task 12: Add __str__ method
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Departments'
+
+
+class Course(models.Model):
+    """
+    Course model representing individual courses.
+    
+    Attributes:
+        name: Course name (e.g., Data Structures)
+        code: Unique course code (e.g., CS101)
+        credits: Number of credits (1-6)
+        department: ForeignKey to Department
+    """
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, unique=True)  # unique constraint
+    credits = models.PositiveIntegerField(default=3)
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.CASCADE,  # Deleting department deletes its courses
+        related_name='courses'
+    )
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Task 12: Add __str__ method
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+    
+    class Meta:
+        ordering = ['code']
+        indexes = [
+            models.Index(fields=['code']),
+            models.Index(fields=['department', 'is_active']),
+        ]
+
+
+class Student(models.Model):
+    """
+    Student model representing enrolled students.
+    
+    Attributes:
+        first_name: Student's first name
+        last_name: Student's last name
+        email: Unique email address
+        department: ForeignKey to Department
+        enrollment_year: Year of enrollment
+    """
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)  # unique constraint
+    department = models.ForeignKey(
+        Department,
+        on_delete=models.SET_NULL,  # If department deleted, student remains
+        null=True,
+        blank=True,
+        related_name='students'
+    )
+    enrollment_year = models.PositiveIntegerField()
+    date_of_birth = models.DateField(null=True, blank=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Task 12: Add __str__ method
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.email})"
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    class Meta:
+        ordering = ['last_name', 'first_name']
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['department', 'enrollment_year']),
+        ]
+
+
+class Enrollment(models.Model):
+    """
+    Enrollment model representing course registration.
+    
+    Attributes:
+        student: ForeignKey to Student
+        course: ForeignKey to Course
+        enrollment_date: Date of enrollment
+        grade: Grade received (nullable)
+    """
+    GRADE_CHOICES = [
+        ('A', 'A'),
+        ('A-', 'A-'),
+        ('B+', 'B+'),
+        ('B', 'B'),
+        ('B-', 'B-'),
+        ('C+', 'C+'),
+        ('C', 'C'),
+        ('C-', 'C-'),
+        ('D+', 'D+'),
+        ('D', 'D'),
+        ('F', 'F'),
+        ('W', 'Withdrawn'),
+        ('I', 'Incomplete'),
+    ]
+    
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,  # Deleting student deletes enrollments
+        related_name='enrollments'
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,  # Deleting course deletes enrollments
+        related_name='enrollments'
+    )
+    enrollment_date = models.DateTimeField(default=timezone.now)
+    grade = models.CharField(
+        max_length=2,
+        choices=GRADE_CHOICES,
+        null=True,
+        blank=True
+    )
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True, null=True)
+    
+    # Task 12: Add __str__ method
+    def __str__(self):
+        return f"{self.student.full_name} - {self.course.code} ({self.get_grade_display() or 'No Grade'})"
+    
+    # Task 15: Add Meta class with unique_together
+    class Meta:
+        ordering = ['-enrollment_date']
+        unique_together = [['student', 'course']]  # Prevent duplicate enrollments
+        indexes = [
+            models.Index(fields=['student', 'course']),
+            models.Index(fields=['enrollment_date']),
+        ]
+        verbose_name_plural = 'Enrollments'
