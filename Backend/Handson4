@@ -1,0 +1,146 @@
+"""
+Unit tests for course routes.
+"""
+
+import json
+import pytest
+from app import create_app
+from courses.models import db, Course
+
+
+@pytest.fixture
+def client():
+    """Create test client for the application."""
+    app = create_app('testing')
+    with app.test_client() as client:
+        with app.app_context():
+            db.create_all()
+            yield client
+        db.drop_all()
+
+
+def test_get_courses_empty(client):
+    """Test GET /api/courses/ when no courses exist."""
+    response = client.get('/api/courses/')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['status'] == 'success'
+    assert data['data']['courses'] == []
+
+
+def test_create_course(client):
+    """Test POST /api/courses/ to create a new course."""
+    course_data = {
+        'name': 'Data Structures',
+        'code': 'CS101',
+        'credits': 4
+    }
+    response = client.post('/api/courses/', 
+                          data=json.dumps(course_data),
+                          content_type='application/json')
+    assert response.status_code == 201
+    data = json.loads(response.data)
+    assert data['status'] == 'success'
+    assert data['data']['name'] == 'Data Structures'
+    assert data['data']['code'] == 'CS101'
+
+
+def test_create_course_missing_fields(client):
+    """Test POST /api/courses/ with missing required fields."""
+    course_data = {
+        'name': 'Data Structures'
+        # Missing code and credits
+    }
+    response = client.post('/api/courses/', 
+                          data=json.dumps(course_data),
+                          content_type='application/json')
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert data['status'] == 'error'
+    assert 'Missing required fields' in data['message']
+
+
+def test_get_course(client):
+    """Test GET /api/courses/<id>/ to get a single course."""
+    # Create a course first
+    course_data = {
+        'name': 'Algorithms',
+        'code': 'CS102',
+        'credits': 4
+    }
+    response = client.post('/api/courses/', 
+                          data=json.dumps(course_data),
+                          content_type='application/json')
+    assert response.status_code == 201
+    created_course = json.loads(response.data)['data']
+    
+    # Get the course
+    response = client.get(f'/api/courses/{created_course["id"]}/')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['status'] == 'success'
+    assert data['data']['code'] == 'CS102'
+
+
+def test_get_nonexistent_course(client):
+    """Test GET /api/courses/<id>/ with nonexistent ID."""
+    response = client.get('/api/courses/999/')
+    assert response.status_code == 404
+    data = json.loads(response.data)
+    assert data['status'] == 'error'
+    assert 'not found' in data['message']
+
+
+def test_update_course(client):
+    """Test PUT /api/courses/<id>/ to update a course."""
+    # Create a course first
+    course_data = {
+        'name': 'Web Development',
+        'code': 'CS201',
+        'credits': 3
+    }
+    response = client.post('/api/courses/', 
+                          data=json.dumps(course_data),
+                          content_type='application/json')
+    assert response.status_code == 201
+    created_course = json.loads(response.data)['data']
+    
+    # Update the course
+    update_data = {
+        'name': 'Advanced Web Development',
+        'credits': 4
+    }
+    response = client.put(f'/api/courses/{created_course["id"]}/',
+                         data=json.dumps(update_data),
+                         content_type='application/json')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['status'] == 'success'
+    assert data['data']['name'] == 'Advanced Web Development'
+    assert data['data']['credits'] == 4
+
+
+def test_delete_course(client):
+    """Test DELETE /api/courses/<id>/ to delete a course."""
+    # Create a course first
+    course_data = {
+        'name': 'Database Systems',
+        'code': 'CS301',
+        'credits': 4
+    }
+    response = client.post('/api/courses/', 
+                          data=json.dumps(course_data),
+                          content_type='application/json')
+    assert response.status_code == 201
+    created_course = json.loads(response.data)['data']
+    
+    # Delete the course
+    response = client.delete(f'/api/courses/{created_course["id"]}/')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['status'] == 'success'
+    assert 'deleted' in data['data']['message']
+    
+    # Verify it's gone
+    response = client.get(f'/api/courses/{created_course["id"]}/')
+    assert response.status_code == 404
