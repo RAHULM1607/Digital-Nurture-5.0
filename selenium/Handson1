@@ -1,0 +1,285 @@
+# Unit test example (test_unit_crud.py)
+import pytest
+from unittest.mock import MagicMock, AsyncMock
+from crud import create_course
+from schemas import CourseCreate
+
+@pytest.mark.asyncio
+async def test_create_course_unit():
+    """Unit test for create_course function - tests single function in isolation"""
+    # Mock dependencies
+    mock_db = AsyncMock()
+    
+    # Create test data
+    course_data = CourseCreate(
+        name="Unit Test Course",
+        code="UNIT101",
+        credits=4,
+        department_id=1,
+        description="This is a unit test"
+    )
+    
+    # Execute function
+    result = await create_course(mock_db, course_data)
+    
+    # Assertions
+    assert result.name == "Unit Test Course"
+    assert result.code == "UNIT101"
+    assert result.credits == 4
+    assert result.department_id == 1
+    
+    # Verify interactions
+    mock_db.add.assert_called_once()
+    mock_db.commit.assert_called_once()
+    mock_db.refresh.assert_called_once()
+
+    # Integration test example (test_integration_api.py)
+import pytest
+from fastapi.testclient import TestClient
+from main import app
+from database import get_db, AsyncSessionLocal
+
+client = TestClient(app)
+
+@pytest.mark.asyncio
+async def test_create_course_integration():
+    """Integration test: API endpoint + Database interaction"""
+    
+    # First create a department for the test
+    dept_data = {
+        "name": "Integration Test Dept",
+        "head_of_dept": "Dr. Integration",
+        "budget": 100000
+    }
+    dept_response = client.post("/api/v1/departments/", json=dept_data)
+    assert dept_response.status_code == 201
+    dept_id = dept_response.json()["id"]
+    
+    # Test course creation
+    course_data = {
+        "name": "Integration Test Course",
+        "code": "INT101",
+        "credits": 4,
+        "department_id": dept_id,
+        "description": "Integration testing course"
+    }
+    
+    # Make API request
+    response = client.post("/api/v1/courses/", json=course_data)
+    
+    # Verify API response
+    assert response.status_code == 201
+    response_data = response.json()
+    assert response_data["name"] == "Integration Test Course"
+    assert response_data["code"] == "INT101"
+    assert response_data["credits"] == 4
+    assert response_data["department_id"] == dept_id
+    assert "id" in response_data
+    
+    # Verify Location header
+    assert "Location" in response.headers
+    assert f"/api/v1/courses/{response_data['id']}/" in response.headers["Location"]
+    
+    # Verify database state (using a separate session to ensure fresh data)
+    async with AsyncSessionLocal() as db:
+        from models import Course
+        from sqlalchemy import select
+        result = await db.execute(select(Course).where(Course.code == "INT101"))
+        course = result.scalar_one_or_none()
+        assert course is not None
+        assert course.name == "Integration Test Course"
+        assert course.credits == 4
+        assert course.department_id == dept_id
+
+        # System/E2E test example (test_system_e2e.py)
+import pytest
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+def test_course_enrollment_system_e2e():
+    """
+    System/End-to-End Test: Complete course enrollment flow
+    Tests the entire system from API request to database response
+    """
+    
+    # Step 1: Create Department
+    print("Step 1: Creating department...")
+    dept_data = {
+        "name": "Computer Science",
+        "head_of_dept": "Dr. Alan Turing",
+        "budget": 500000
+    }
+    dept_response = client.post("/api/v1/departments/", json=dept_data)
+    assert dept_response.status_code == 201, "Department creation failed"
+    dept_id = dept_response.json()["id"]
+    print(f"✅ Department created with ID: {dept_id}")
+    
+    # Step 2: Create Course
+    print("Step 2: Creating course...")
+    course_data = {
+        "name": "System Test Course",
+        "code": "SYS101",
+        "credits": 4,
+        "department_id": dept_id,
+        "description": "Course for system testing"
+    }
+    course_response = client.post("/api/v1/courses/", json=course_data)
+    assert course_response.status_code == 201, "Course creation failed"
+    course_id = course_response.json()["id"]
+    print(f"✅ Course created with ID: {course_id}")
+    
+    # Step 3: Create Student
+    print("Step 3: Creating student...")
+    student_data = {
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "email": "jane.doe@example.com",
+        "enrollment_year": 2024,
+        "department_id": dept_id
+    }
+    student_response = client.post("/api/v1/students/", json=student_data)
+    assert student_response.status_code == 201, "Student creation failed"
+    student_id = student_response.json()["id"]
+    print(f"✅ Student created with ID: {student_id}")
+    
+    # Step 4: Enroll Student in Course
+    print("Step 4: Enrolling student in course...")
+    enrollment_data = {
+        "student_id": student_id,
+        "course_id": course_id,
+        "grade": None,
+        "is_active": True
+    }
+    enrollment_response = client.post("/api/v1/enrollments/", json=enrollment_data)
+    assert enrollment_response.status_code == 201, "Enrollment failed"
+    enrollment_id = enrollment_response.json()["id"]
+    print(f"✅ Enrollment created with ID: {enrollment_id}")
+    
+    # Step 5: Verify Course appears in Student's enrolled courses
+    print("Step 5: Verifying course in student's enrolled courses...")
+    student_courses_response = client.get(f"/api/v1/students/{student_id}/courses/")
+    assert student_courses_response.status_code == 200
+    student_courses = student_courses_response.json()
+    courses = student_courses.get("courses", [])
+    assert any(c["id"] == course_id for c in courses), "Course not found in student's enrolled courses"
+    print(f"✅ Course found in student's enrolled courses")
+    
+    # Step 6: Verify Student appears in Course's enrolled students
+    print("Step 6: Verifying student in course's enrolled students...")
+    course_students_response = client.get(f"/api/v1/courses/{course_id}/students/")
+    assert course_students_response.status_code == 200
+    course_students = course_students_response.json()
+    students = course_students.get("students", [])
+    assert any(s["id"] == student_id for s in students), "Student not found in course's enrolled students"
+    print(f"✅ Student found in course's enrolled students")
+    
+    # Step 7: Verify enrollment details
+    print("Step 7: Verifying enrollment details...")
+    enrollment_response = client.get(f"/api/v1/enrollments/{enrollment_id}/")
+    assert enrollment_response.status_code == 200
+    enrollment_data = enrollment_response.json()
+    assert enrollment_data["student_id"] == student_id
+    assert enrollment_data["course_id"] == course_id
+    assert enrollment_data["is_active"] == True
+    print(f"✅ Enrollment verified successfully")
+    
+    print("\n🎉 End-to-End System Test PASSED!")
+    print(f"Summary: Department {dept_id} → Course {course_id} → Student {student_id} → Enrollment {enrollment_id}")
+
+    # UAT Test script (uat_admin_course_creation.py)
+"""
+User Acceptance Test: Admin creates a new course
+
+Test Scenario: As a college administrator, I want to add a new course
+"Artificial Intelligence" for the upcoming semester so that students can enroll.
+
+Acceptance Criteria:
+1. Admin can access the course creation form
+2. Admin can enter course details (name, code, credits, department)
+3. System validates the input data
+4. Course is saved to the system
+5. Admin receives confirmation of successful creation
+6. Course appears in the course list
+"""
+
+def uat_test_admin_creates_course(client):
+    """
+    UAT Test: Admin creates a new course for the semester
+    This simulates a real admin user's workflow
+    """
+    print("\n" + "="*60)
+    print("USER ACCEPTANCE TEST: Admin Creates New Course")
+    print("="*60)
+    
+    # Precondition: Admin is logged in (simulated)
+    print("✅ Precondition: Admin is authenticated")
+    
+    # Scenario: Admin wants to create a new AI course
+    print("\n📋 Scenario: Admin creates 'Artificial Intelligence' course")
+    
+    # Step 1: Admin navigates to course creation page
+    print("\nStep 1: Navigating to course creation page...")
+    print("   → Admin clicks 'Create Course' button")
+    
+    # Step 2: Admin fills in the course details
+    print("\nStep 2: Filling in course details...")
+    new_course = {
+        "name": "Artificial Intelligence",
+        "code": "CS401",
+        "credits": 4,
+        "department_id": 1,  # Computer Science
+        "description": "Introduction to AI, machine learning, and neural networks",
+        "is_active": True
+    }
+    print(f"   → Course Name: {new_course['name']}")
+    print(f"   → Course Code: {new_course['code']}")
+    print(f"   → Credits: {new_course['credits']}")
+    print(f"   → Department: Computer Science")
+    
+    # Step 3: Admin submits the form
+    print("\nStep 3: Submitting course creation request...")
+    response = client.post("/api/v1/courses/", json=new_course)
+    
+    # Step 4: System validates and saves the course
+    print("\nStep 4: System processing...")
+    if response.status_code == 201:
+        course_data = response.json()
+        print("   ✅ Course created successfully!")
+        print(f"   → Course ID: {course_data['id']}")
+        print(f"   → Created at: {course_data.get('created_at')}")
+    else:
+        print(f"   ❌ Failed: {response.status_code} - {response.text}")
+        return False
+    
+    # Step 5: Admin verifies course appears in list
+    print("\nStep 5: Verifying course appears in course list...")
+    list_response = client.get("/api/v1/courses/")
+    courses = list_response.json().get("items", [])
+    
+    found = any(c["code"] == "CS401" for c in courses)
+    if found:
+        print("   ✅ Course found in course list")
+    else:
+        print("   ❌ Course not found in course list")
+        return False
+    
+    # Step 6: Admin views course details
+    print("\nStep 6: Viewing course details...")
+    detail_response = client.get(f"/api/v1/courses/{course_data['id']}/")
+    if detail_response.status_code == 200:
+        print("   ✅ Course details retrieved successfully")
+        print(f"   → Name: {detail_response.json()['name']}")
+        print(f"   → Description: {detail_response.json().get('description', 'N/A')}")
+    else:
+        print("   ❌ Failed to retrieve course details")
+        return False
+    
+    print("\n" + "="*60)
+    print("✅ USER ACCEPTANCE TEST PASSED")
+    print(f"Summary: Course '{new_course['name']}' ({new_course['code']}) successfully created by admin")
+    print("="*60)
+    
+    return True
+
