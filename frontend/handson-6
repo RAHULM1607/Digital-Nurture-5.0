@@ -1,0 +1,139 @@
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEnrollment } from '../context/EnrollmentContext';
+import { unenroll } from '../redux/enrollmentSlice';
+
+const ProfilePage = () => {
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    semester: ''
+  });
+
+  // Task 89: Redux Toolkit - useSelector
+  const reduxEnrolledCourses = useSelector(state => state.enrollment.enrolledCourses);
+  const dispatch = useDispatch();
+  
+  // Task 83: Context API - useContext
+  const { enrolledCourses: contextEnrolledCourses, unenroll: contextUnenroll } = useEnrollment();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Task 84: Remove/Unenroll from context
+  const handleUnenrollContext = (courseId) => {
+    contextUnenroll(courseId);
+  };
+
+  // Task 88: Remove/Unenroll from Redux
+  const handleUnenrollRedux = (courseId) => {
+    dispatch(unenroll(courseId));
+  };
+
+  return (
+    <div>
+      <h2>Student Profile</h2>
+      
+      <div className="profile-form">
+        <h3>Personal Information</h3>
+        
+        <div className="form-group">
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={profile.name}
+            onChange={handleChange}
+            placeholder="Enter your name"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={profile.email}
+            onChange={handleChange}
+            placeholder="Enter your email"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="semester">Semester</label>
+          <input
+            type="text"
+            id="semester"
+            name="semester"
+            value={profile.semester}
+            onChange={handleChange}
+            placeholder="e.g., Fall 2024"
+          />
+        </div>
+      </div>
+
+      {/* Redux Toolkit Enrolled Courses */}
+      <div style={{ marginTop: '30px' }}>
+        <h3>Redux Toolkit - Enrolled Courses ({reduxEnrolledCourses.length})</h3>
+        {reduxEnrolledCourses.length === 0 ? (
+          <p style={{ color: '#666', padding: '20px 0' }}>
+            No courses enrolled yet. Browse courses and enroll!
+          </p>
+        ) : (
+          <div className="course-grid" style={{ marginTop: '15px' }}>
+            {reduxEnrolledCourses.map(course => (
+              <div key={course.id} className="course-card">
+                <h3>{course.name}</h3>
+                <div className="course-code">{course.code}</div>
+                <div className="course-credits">📖 {course.credits} credits</div>
+                <div className="course-grade">Grade: {course.grade}</div>
+                <button
+                  className="enroll-btn enrolled"
+                  onClick={() => handleUnenrollRedux(course.id)}
+                >
+                   Remove (Redux)
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Context API Enrolled Courses */}
+      <div style={{ marginTop: '30px', paddingTop: '30px', borderTop: '2px solid #f0f0f0' }}>
+        <h3>Context API - Enrolled Courses ({contextEnrolledCourses.length})</h3>
+        {contextEnrolledCourses.length === 0 ? (
+          <p style={{ color: '#666', padding: '20px 0' }}>
+            No courses enrolled yet. Browse courses and enroll!
+          </p>
+        ) : (
+          <div className="course-grid" style={{ marginTop: '15px' }}>
+            {contextEnrolledCourses.map(course => (
+              <div key={course.id} className="course-card">
+                <h3>{course.name}</h3>
+                <div className="course-code">{course.code}</div>
+                <div className="course-credits">📖 {course.credits} credits</div>
+                <div className="course-grade">Grade: {course.grade}</div>
+                <button
+                  className="enroll-btn enrolled"
+                  onClick={() => handleUnenrollContext(course.id)}
+                >
+                   Remove (Context)
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage
