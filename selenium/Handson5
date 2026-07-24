@@ -1,0 +1,163 @@
+"""
+Practice File: locator_practice.py
+Testing all six locator strategies on the Simple Form Demo page
+"""
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+import time
+
+# Setup WebDriver
+def setup_driver():
+    options = Options()
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome(options=options)
+    return driver
+
+# Open Simple Form Demo page
+driver = setup_driver()
+driver.get("https://www.seleniumeasy.com/test/basic-first-form-demo.html")
+
+# Wait for page to load
+time.sleep(2)
+
+# ==============================================
+# Strategy 1: By.ID
+# ==============================================
+print("\n" + "="*60)
+print("STRATEGY 1: By.ID")
+print("="*60)
+
+try:
+    # Locate message input field using ID
+    message_input_id = driver.find_element(By.ID, "user-message")
+    message_input_id.clear()
+    message_input_id.send_keys("Testing By.ID locator")
+    print("✅ Successfully located by ID")
+    print(f"   Element: {message_input_id}")
+    print(f"   Tag Name: {message_input_id.tag_name}")
+    print(f"   Value set: Testing By.ID locator")
+except Exception as e:
+    print(f"❌ Failed to locate by ID: {e}")
+
+# ==============================================
+# Strategy 2: By.NAME
+# ==============================================
+print("\n" + "="*60)
+print("STRATEGY 2: By.NAME")
+print("="*60)
+
+try:
+    # Locate message input field using NAME
+    message_input_name = driver.find_element(By.NAME, "message")
+    message_input_name.clear()
+    message_input_name.send_keys("Testing By.NAME locator")
+    print("✅ Successfully located by NAME")
+    print(f"   Element: {message_input_name}")
+    print(f"   Tag Name: {message_input_name.tag_name}")
+    print(f"   Value set: Testing By.NAME locator")
+except Exception as e:
+    print(f"❌ Failed to locate by NAME: {e}")
+
+# ==============================================
+# Strategy 3: By.CLASS_NAME
+# ==============================================
+print("\n" + "="*60)
+print("STRATEGY 3: By.CLASS_NAME")
+print("="*60)
+
+try:
+    # Locate message input field using CLASS_NAME
+    # Note: the input has class "form-control"
+    message_input_class = driver.find_element(By.CLASS_NAME, "form-control")
+    message_input_class.clear()
+    message_input_class.send_keys("Testing By.CLASS_NAME locator")
+    print("✅ Successfully located by CLASS_NAME")
+    print(f"   Element: {message_input_class}")
+    print(f"   Tag Name: {message_input_class.tag_name}")
+    print(f"   Value set: Testing By.CLASS_NAME locator")
+except Exception as e:
+    print(f"❌ Failed to locate by CLASS_NAME: {e}")
+
+# ==============================================
+# Strategy 4: By.TAG_NAME
+# ==============================================
+print("\n" + "="*60)
+print("STRATEGY 4: By.TAG_NAME")
+print("="*60)
+
+try:
+    # Locate message input field using TAG_NAME
+    # Note: this will find the first input tag on the page
+    # We need to find the specific input by filtering
+    all_inputs = driver.find_elements(By.TAG_NAME, "input")
+    message_input_tag = None
+    for input_elem in all_inputs:
+        # Find the one with placeholder text "Enter your message"
+        if input_elem.get_attribute("placeholder") == "Enter your message":
+            message_input_tag = input_elem
+            break
+    
+    if message_input_tag:
+        message_input_tag.clear()
+        message_input_tag.send_keys("Testing By.TAG_NAME locator")
+        print("✅ Successfully located by TAG_NAME")
+        print(f"   Element: {message_input_tag}")
+        print(f"   Tag Name: {message_input_tag.tag_name}")
+        print(f"   Value set: Testing By.TAG_NAME locator")
+    else:
+        print("❌ Could not find the input field by TAG_NAME")
+except Exception as e:
+    print(f"❌ Failed to locate by TAG_NAME: {e}")
+
+# ==============================================
+# Strategy 5: By.XPATH with Absolute Path
+# ==============================================
+print("\n" + "="*60)
+print("STRATEGY 5: By.XPATH with Absolute Path")
+print("="*60)
+
+try:
+    # Absolute XPath (very brittle - breaks with any HTML change)
+    absolute_xpath = "/html/body/div[2]/div/div[2]/div/div[1]/div[2]/form/div[1]/div/input"
+    message_input_abs = driver.find_element(By.XPATH, absolute_xpath)
+    message_input_abs.clear()
+    message_input_abs.send_keys("Testing Absolute XPath locator")
+    print("✅ Successfully located by Absolute XPath")
+    print(f"   Element: {message_input_abs}")
+    print(f"   Tag Name: {message_input_abs.tag_name}")
+    print(f"   Value set: Testing Absolute XPath locator")
+except Exception as e:
+    print(f"❌ Failed to locate by Absolute XPath: {e}")
+
+# ==============================================
+# Strategy 6: By.XPATH with Relative Path
+# ==============================================
+print("\n" + "="*60)
+print("STRATEGY 6: By.XPATH with Relative Path")
+print("="*60)
+
+try:
+    # Relative XPath using attributes
+    relative_xpath = "//input[@id='user-message']"
+    # Alternative relative XPaths:
+    # "//input[@name='message']"
+    # "//input[@placeholder='Enter your message']"
+    # "//input[@class='form-control' and @id='user-message']"
+    # "//div[@class='form-group']//input"
+    
+    message_input_rel = driver.find_element(By.XPATH, relative_xpath)
+    message_input_rel.clear()
+    message_input_rel.send_keys("Testing Relative XPath locator")
+    print("✅ Successfully located by Relative XPath")
+    print(f"   Element: {message_input_rel}")
+    print(f"   Tag Name: {message_input_rel.tag_name}")
+    print(f"   XPath used: {relative_xpath}")
+    print(f"   Value set: Testing Relative XPath locator")
+except Exception as e:
+    print(f"❌ Failed to locate by Relative XPath: {e}")
+
+# Close browser
+driver.quit()
