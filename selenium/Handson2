@@ -1,0 +1,142 @@
+================================================================================
+                               V-MODEL DIAGRAM
+================================================================================
+
+   SDLC (Development)                    TDLC (Testing)
+   (Left Side)                           (Right Side)
+
+   +----------------------------+        +----------------------------+
+   |     REQUIREMENTS           |------->|     ACCEPTANCE             |
+   |     Phase                  |        |     TESTING                |
+   |                            |        |                            |
+   |  - User Stories            |        |  - UAT Tests               |
+   |  - Business Req.           |        |  - Alpha/Beta Testing      |
+   +----------------------------+        +----------------------------+
+             |                                         |
+             v                                         |
+   +----------------------------+        +----------------------------+
+   |     SYSTEM DESIGN          |------->|     SYSTEM                 |
+   |     Phase                  |        |     TESTING                |
+   |                            |        |                            |
+   |  - High-Level Design       |        |  - End-to-End Tests        |
+   |  - Architecture            |        |  - Performance Tests       |
+   +----------------------------+        +----------------------------+
+             |                                         |
+             v                                         |
+   +----------------------------+        +----------------------------+
+   |     ARCHITECTURE           |------->|     INTEGRATION            |
+   |     DESIGN                 |        |     TESTING                |
+   |                            |        |                            |
+   |  - Module Design           |        |  - API + Database Tests    |
+   |  - Database Schema         |        |  - Service Integration     |
+   +----------------------------+        +----------------------------+
+             |                                         |
+             v                                         |
+   +----------------------------+        +----------------------------+
+   |     MODULE DESIGN          |------->|     UNIT                   |
+   |     Phase                  |        |     TESTING                |
+   |                            |        |                            |
+   |  - Component Specs         |        |  - Function Tests          |
+   |  - API Contracts           |        |  - Code Coverage           |
+   +----------------------------+        +----------------------------+
+             |
+             v
+   +----------------------------+
+   |        CODING              |
+   |        Phase               |
+   |                            |
+   |  - Implementation          |
+   +----------------------------+
+
+                     TIME ------------------------------------>
+
+================================================================================
+                        V-MODEL PHASE MAPPINGS
+================================================================================
+
+REQUIREMENTS      <-->  ACCEPTANCE TESTING    (Verifies business needs are met)
+SYSTEM DESIGN     <-->  SYSTEM TESTING        (Verifies system meets specifications)
+ARCHITECTURE      <-->  INTEGRATION TESTING   (Verifies modules work together)
+MODULE DESIGN     <-->  UNIT TESTING          (Verifies individual components)
+CODING            -->   (Implementation)
+================================================================================
+
+QA Requirement Review:
+
+- As an admin, I want to create a course -> Should specify character limits
+- As a student, I want to enroll in a course -> Should define duplicate enrollment rules
+- Course code must be unique -> Confirm what happens when duplicate occurs
+- API should be fast -> Define measurable: < 200ms response time
+- Sensitive data should be secure -> Define which fields are sensitive
+
+QA Questions:
+1. What's the maximum course name length?
+2. What's the validation for email addresses?
+3. What happens when enrollment is attempted twice?
+4. What are the performance SLA requirements?
+5. What are the security requirements for the API?
+
+QA Design Review:
+
+- The API has REST endpoints -> Define API contract tests
+- Database uses PostgreSQL -> Plan integration tests
+- We use async SQLAlchemy -> Design unit tests with mocks
+- Pagination will be used -> Define test cases for pagination
+
+Testability Checklist:
+- Are all API endpoints clearly documented?
+- Can dependencies be mocked for unit testing?
+- Is the database schema testable?
+- Are error handling paths testable?
+- Can we run tests in isolation?
+
+API Contract Tests Written:
+1. GET /api/v1/courses/ -> Returns JSON array
+2. POST /api/v1/courses/ -> Accepts JSON with required fields
+3. GET /api/v1/courses/{id}/ -> Returns single course object
+4. PUT /api/v1/courses/{id}/ -> Accepts full update
+5. PATCH /api/v1/courses/{id}/ -> Accepts partial update
+6. DELETE /api/v1/courses/{id}/ -> Returns 204 No Content
+
+Waterfall Scenario:
+
+Month 1-3: Developers build the entire API (courses, departments, students, enrollments)
+Month 4: QA starts testing
+Day 1 of QA: "The enrollment validation doesn't prevent duplicate enrollments!"
+Month 4-6: Developers fix the issue, causing other features to break
+Month 6-7: Additional testing
+Month 8: Deployment
+
+Cost Impact:
+- Late discovery: The defect is found after 3 months of development
+- Cost to fix: 100x more expensive than catching it in requirements
+- Delays: 2-3 months added to timeline
+
+Sprint Planning - Sprint: "Course Management Feature"
+
+User Story: "As a college admin, I want to create a new course"
+
+QA Activities:
+
+1. Define Acceptance Criteria:
+   - Given valid course data, system creates course
+   - Given missing required fields, system returns error
+   - Given duplicate course code, system returns error
+
+2. Estimate Test Effort:
+   - Unit tests: 4 hours
+   - Integration tests: 2 hours
+   - System tests: 3 hours
+   - Total: 9 hours
+
+3. Identify Test Dependencies:
+   - Need test department ready
+   - Need database migration script
+   - Need mock test data
+
+4. Define Test Data Requirements:
+   - Course name: "Test Course"
+   - Course code: "TEST101"
+   - Credits: 3-4
+   - Department ID: 1
+
