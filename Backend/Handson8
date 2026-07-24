@@ -1,0 +1,208 @@
+"""
+Pydantic schemas for request/response validation.
+"""
+
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from typing import Optional, List, Any
+from datetime import datetime
+
+
+# ==============================================
+# Course Schemas
+# ==============================================
+
+class CourseBase(BaseModel):
+    """Base course schema with common fields."""
+    name: str = Field(..., min_length=1, max_length=200, description="Course name")
+    code: str = Field(..., min_length=1, max_length=20, description="Unique course code")
+    credits: int = Field(..., ge=1, le=6, description="Number of credits (1-6)")
+    department_id: int = Field(..., description="Department ID")
+
+
+class CourseCreate(CourseBase):
+    """Schema for creating a new course."""
+    description: Optional[str] = Field(None, max_length=1000)
+    is_active: bool = True
+
+
+# Task 79: PATCH schema (all fields optional)
+class CoursePatch(BaseModel):
+    """Schema for partial update (PATCH) - all fields optional."""
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    code: Optional[str] = Field(None, min_length=1, max_length=20)
+    credits: Optional[int] = Field(None, ge=1, le=6)
+    department_id: Optional[int] = None
+    description: Optional[str] = Field(None, max_length=1000)
+    is_active: Optional[bool] = None
+
+
+class CourseUpdate(BaseModel):
+    """Schema for full update (PUT) - all fields required."""
+    name: str = Field(..., min_length=1, max_length=200)
+    code: str = Field(..., min_length=1, max_length=20)
+    credits: int = Field(..., ge=1, le=6)
+    department_id: int = Field(...)
+    description: Optional[str] = Field(None, max_length=1000)
+    is_active: bool = True
+
+
+class CourseResponse(CourseBase):
+    """Schema for course response (includes all fields)."""
+    id: int
+    description: Optional[str] = None
+    is_active: bool
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    department_name: Optional[str] = None
+    enrollment_count: int = 0
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Department Schemas
+# ==============================================
+
+class DepartmentBase(BaseModel):
+    """Base department schema."""
+    name: str = Field(..., min_length=1, max_length=100)
+    head_of_dept: str = Field(..., min_length=1, max_length=100)
+    budget: float = Field(0.0, ge=0)
+
+
+class DepartmentCreate(DepartmentBase):
+    """Schema for creating a department."""
+    pass
+
+
+class DepartmentPatch(BaseModel):
+    """Schema for partial update (PATCH)."""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    head_of_dept: Optional[str] = Field(None, min_length=1, max_length=100)
+    budget: Optional[float] = Field(None, ge=0)
+
+
+class DepartmentResponse(DepartmentBase):
+    """Schema for department response with nested courses."""
+    id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    courses: List[CourseResponse] = []
+    student_count: int = 0
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Student Schemas
+# ==============================================
+
+class StudentBase(BaseModel):
+    """Base student schema."""
+    first_name: str = Field(..., min_length=1, max_length=50)
+    last_name: str = Field(..., min_length=1, max_length=50)
+    email: EmailStr = Field(..., description="Valid email address")
+    enrollment_year: int = Field(..., ge=2000, le=2030)
+    department_id: Optional[int] = None
+    date_of_birth: Optional[datetime] = None
+    phone_number: Optional[str] = Field(None, max_length=15)
+
+
+class StudentCreate(StudentBase):
+    """Schema for creating a student."""
+    is_active: bool = True
+
+
+class StudentPatch(BaseModel):
+    """Schema for partial update (PATCH)."""
+    first_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    email: Optional[EmailStr] = None
+    enrollment_year: Optional[int] = Field(None, ge=2000, le=2030)
+    department_id: Optional[int] = None
+    date_of_birth: Optional[datetime] = None
+    phone_number: Optional[str] = Field(None, max_length=15)
+    is_active: Optional[bool] = None
+
+
+class StudentResponse(StudentBase):
+    """Schema for student response."""
+    id: int
+    full_name: str
+    is_active: bool
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    department_name: Optional[str] = None
+    enrolled_courses_count: int = 0
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Enrollment Schemas
+# ==============================================
+
+class EnrollmentBase(BaseModel):
+    """Base enrollment schema."""
+    student_id: int = Field(..., description="Student ID")
+    course_id: int = Field(..., description="Course ID")
+    grade: Optional[str] = Field(None, pattern=r'^[A-D][+-]?$|^F$|^W$|^I$')
+    is_active: bool = True
+    notes: Optional[str] = Field(None, max_length=1000)
+
+
+class EnrollmentCreate(EnrollmentBase):
+    """Schema for creating an enrollment."""
+    pass
+
+
+class EnrollmentPatch(BaseModel):
+    """Schema for partial update (PATCH)."""
+    grade: Optional[str] = Field(None, pattern=r'^[A-D][+-]?$|^F$|^W$|^I$')
+    is_active: Optional[bool] = None
+    notes: Optional[str] = Field(None, max_length=1000)
+
+
+class EnrollmentResponse(EnrollmentBase):
+    """Schema for enrollment response."""
+    id: int
+    enrollment_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    student_name: Optional[str] = None
+    student_email: Optional[str] = None
+    course_name: Optional[str] = None
+    course_code: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Task 83: Pagination Response Schema
+# ==============================================
+
+class PaginatedResponse(BaseModel):
+    """Schema for paginated responses."""
+    count: int = Field(..., description="Total number of items")
+    next: Optional[str] = Field(None, description="URL to the next page")
+    previous: Optional[str] = Field(None, description="URL to the previous page")
+    page: int = Field(..., description="Current page number")
+    page_size: int = Field(..., description="Number of items per page")
+    total_pages: int = Field(..., description="Total number of pages")
+    results: List[Any] = Field(..., description="List of items on this page")
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MessageResponse(BaseModel):
+    """Schema for simple message responses."""
+    message: str
+    status: str = "success"
+
+
+# Task 85: Error Response Schema
+class ErrorResponseSchema(BaseModel):
+    """Schema for standardized error responses."""
+    error: dict = Field(..., description="Error details with code and message")
+    
+    model_config = ConfigDict(from_attributes=True)
