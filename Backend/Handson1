@@ -1,0 +1,159 @@
+"""
+Task 1: Understanding the Request-Response Cycle in Django
+===============================================================
+
+1. Journey of a GET /api/courses/ request through a Django application:
+
+   Browser Request (GET /api/courses/)
+         ↓
+   1. MIDDLEWARE (Request Phase)
+         ↓
+   2. URL ROUTER (urls.py)
+         ↓
+   3. VIEW (views.py)
+         ↓
+   4. MODEL (models.py - Database Query)
+         ↓
+   5. VIEW Processes Data
+         ↓
+   6. RESPONSE (HttpResponse/JSON)
+         ↓
+   7. MIDDLEWARE (Response Phase)
+         ↓
+   Browser Receives Response
+
+
+DETAILED FLOW:
+
+STEP 1: URL Router (urls.py)
+   - Django matches the requested URL '/api/courses/' against URL patterns
+   - Uses path() or re_path() to find matching pattern
+   - Routes to the associated view function/class
+
+STEP 2: View (views.py)
+   - View function receives the HttpRequest object
+   - Contains business logic for handling the request
+   - May validate input, process data, etc.
+
+STEP 3: Model (models.py)
+   - View queries the database using Django's ORM
+   - Example: Course.objects.all() queries the courses table
+   - Returns QuerySet of model instances
+
+STEP 4: Response
+   - View returns an HttpResponse object
+   - Can return JSON (JsonResponse), HTML (TemplateResponse), or plain text
+   - Contains status code (200 OK, 404 Not Found, etc.)
+
+
+2. Middleware in Django:
+
+   MIDDLEWARE sits between the web server and the view/response.
+   It's a hook system that processes requests and responses globally.
+
+   Location in the cycle:
+   ┌─────────────────────────────────────────────┐
+   │  Request  →  MIDDLEWARE  →  URL Router     │
+   │              (request phase)                 │
+   │                                               │
+   │  Response ←  MIDDLEWARE  ←  View/Model       │
+   │              (response phase)                │
+   └─────────────────────────────────────────────┘
+
+   Two Built-in Django Middleware Classes:
+
+   1. SecurityMiddleware:
+      - Handles security-related headers and settings
+      - Enables HTTPS redirect (SECURE_SSL_REDIRECT)
+      - Adds security headers like X-Content-Type-Options
+      - Protects against common web vulnerabilities
+
+   2. SessionMiddleware:
+      - Manages session state across requests
+      - Enables session storage (database, cache, or file-based)
+      - Provides request.session attribute in views
+      - Handles session cookie creation and validation
+
+   Other notable middleware:
+   - AuthenticationMiddleware: Associates users with requests
+   - CsrfViewMiddleware: CSRF protection for POST requests
+   - CommonMiddleware: Handles trailing slashes and other common tasks
+
+
+3. WSGI vs ASGI:
+
+   WSGI (Web Server Gateway Interface):
+   - Synchronous request/response model
+   - One request per thread/process
+   - Simple and widely supported
+   - Better for traditional web applications
+   - Limited support for WebSockets and long-lived connections
+
+   ASGI (Asynchronous Server Gateway Interface):
+   - Asynchronous request/response model
+   - Supports multiple protocols (HTTP, WebSockets, HTTP/2)
+   - Better performance for I/O-bound operations
+   - Enables real-time features (chat, notifications)
+   - More complex to implement
+
+   Django Default:
+   - Django uses WSGI by default (wsgi.py)
+   - Works well for most web applications
+   - Simpler deployment with WSGI servers (Gunicorn, uWSGI)
+
+   When to switch to ASGI:
+   - Building real-time applications (WebSockets)
+   - Using async views extensively
+   - Long-polling or Server-Sent Events
+   - High-concurrency I/O operations
+   - Chat applications, live updates, notifications
+
+   To switch: Set ASGI_APPLICATION in settings.py
+   ASGI_APPLICATION = 'coursemanager.asgi.application'
+
+
+
+   Django MVT Mapping:
+   - Model = Model (data layer)
+   - View = Controller (business logic)
+   - Template = View (presentation layer)
+
+   Why Django calls it MVT:
+   - Django's views act as controllers (handling logic and flow)
+   - Templates are used for presentation (what MVC calls View)
+   - This naming emphasizes Django's different approach to request handling
+
+   Example Flow (MVT vs MVC):
+   MVC:  Request → Controller → Model → View → Response
+   MVT:  Request → View → Model → Template → Response
+
+   In both patterns, the core concept is separation of concerns:
+   - Data (Model)
+   - Logic (Controller/View)
+   - Presentation (View/Template)
+"""
+
+# Demonstration of the request cycle in code:
+
+"""
+# Example URL pattern (urls.py):
+# path('api/courses/', views.course_list, name='course-list')
+
+# Example View (views.py):
+def course_list(request):
+    # 1. Middleware request phase already processed
+    # 2. URL router already matched this view
+    courses = Course.objects.all()  # 3. Model query (database)
+    data = [{'id': c.id, 'name': c.name} for c in courses]  # 4. Process data
+    return JsonResponse(data, safe=False)  # 5. Response with JSON
+
+# 6. Middleware response phase runs after this
+"""
+
+print("✓ notes.py loaded successfully")
+print("\nDjango Request-Response Cycle Summary:")
+print("-" * 50)
+print("URL Router → View → Model → Response")
+print("Middleware wraps the entire cycle")
+print("WSGI (default) for sync apps, ASGI for async/WebSockets")
+print("MVC maps to Django's MVT: Model→Model, View→Controller, Template→View")
