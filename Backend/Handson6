@@ -1,0 +1,192 @@
+"""
+Pydantic schemas for request/response validation.
+"""
+
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, List
+from datetime import datetime
+
+
+# ==============================================
+# Task 58: Course Schemas
+# ==============================================
+
+class CourseBase(BaseModel):
+    """Base course schema with common fields."""
+    name: str = Field(..., min_length=1, max_length=200, description="Course name")
+    code: str = Field(..., min_length=1, max_length=20, description="Unique course code")
+    credits: int = Field(..., ge=1, le=6, description="Number of credits (1-6)")
+    department_id: int = Field(..., description="Department ID")
+
+
+class CourseCreate(CourseBase):
+    """Schema for creating a new course."""
+    description: Optional[str] = Field(None, max_length=1000)
+    is_active: bool = True
+
+
+class CourseUpdate(BaseModel):
+    """Schema for updating a course (all fields optional)."""
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    code: Optional[str] = Field(None, min_length=1, max_length=20)
+    credits: Optional[int] = Field(None, ge=1, le=6)
+    department_id: Optional[int] = None
+    description: Optional[str] = Field(None, max_length=1000)
+    is_active: Optional[bool] = None
+
+
+class CourseResponse(CourseBase):
+    """Schema for course response (includes all fields)."""
+    id: int
+    description: Optional[str] = None
+    is_active: bool
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    department_name: Optional[str] = None
+    enrollment_count: int = 0
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Task 59: Department Schemas with nested courses
+# ==============================================
+
+class DepartmentBase(BaseModel):
+    """Base department schema."""
+    name: str = Field(..., min_length=1, max_length=100)
+    head_of_dept: str = Field(..., min_length=1, max_length=100)
+    budget: float = Field(0.0, ge=0)
+
+
+class DepartmentCreate(DepartmentBase):
+    """Schema for creating a department."""
+    pass
+
+
+class DepartmentUpdate(BaseModel):
+    """Schema for updating a department."""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    head_of_dept: Optional[str] = Field(None, min_length=1, max_length=100)
+    budget: Optional[float] = Field(None, ge=0)
+
+
+class DepartmentResponse(DepartmentBase):
+    """Schema for department response with nested courses."""
+    id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    courses: List[CourseResponse] = []
+    student_count: int = 0
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Student Schemas
+# ==============================================
+
+class StudentBase(BaseModel):
+    """Base student schema."""
+    first_name: str = Field(..., min_length=1, max_length=50)
+    last_name: str = Field(..., min_length=1, max_length=50)
+    email: str = Field(..., pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    enrollment_year: int = Field(..., ge=2000, le=2030)
+    department_id: Optional[int] = None
+    date_of_birth: Optional[datetime] = None
+    phone_number: Optional[str] = Field(None, max_length=15)
+
+
+class StudentCreate(StudentBase):
+    """Schema for creating a student."""
+    is_active: bool = True
+
+
+class StudentUpdate(BaseModel):
+    """Schema for updating a student."""
+    first_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=50)
+    email: Optional[str] = Field(None, pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    enrollment_year: Optional[int] = Field(None, ge=2000, le=2030)
+    department_id: Optional[int] = None
+    date_of_birth: Optional[datetime] = None
+    phone_number: Optional[str] = Field(None, max_length=15)
+    is_active: Optional[bool] = None
+
+
+class StudentResponse(StudentBase):
+    """Schema for student response."""
+    id: int
+    full_name: str
+    is_active: bool
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    department_name: Optional[str] = None
+    enrolled_courses_count: int = 0
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Enrollment Schemas
+# ==============================================
+
+class EnrollmentBase(BaseModel):
+    """Base enrollment schema."""
+    student_id: int
+    course_id: int
+    grade: Optional[str] = Field(None, pattern=r'^[A-D][+-]?$|^F$|^W$|^I$')
+    is_active: bool = True
+    notes: Optional[str] = Field(None, max_length=1000)
+
+
+class EnrollmentCreate(EnrollmentBase):
+    """Schema for creating an enrollment."""
+    pass
+
+
+class EnrollmentUpdate(BaseModel):
+    """Schema for updating an enrollment."""
+    grade: Optional[str] = Field(None, pattern=r'^[A-D][+-]?$|^F$|^W$|^I$')
+    is_active: Optional[bool] = None
+    notes: Optional[str] = Field(None, max_length=1000)
+
+
+class EnrollmentResponse(EnrollmentBase):
+    """Schema for enrollment response."""
+    id: int
+    enrollment_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    student_name: Optional[str] = None
+    student_email: Optional[str] = None
+    course_name: Optional[str] = None
+    course_code: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==============================================
+# Response Wrappers
+# ==============================================
+
+class PaginatedResponse(BaseModel):
+    """Schema for paginated responses."""
+    items: List
+    total_count: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class MessageResponse(BaseModel):
+    """Schema for simple message responses."""
+    message: str
+    status: str = "success"
+
+
+class ErrorResponse(BaseModel):
+    """Schema for error responses."""
+    status: str = "error"
+    message: str
+    details: Optional[dict] = None
